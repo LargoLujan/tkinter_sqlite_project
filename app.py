@@ -43,9 +43,14 @@ class Product:
         self.boton_add.grid(row=3, columnspan=2, sticky=W + E)
 
         # Tabla Productos
+        # Estilo personalizado para la tabla
+        style = ttk.Style()
+        style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri',11)) # Se modifica la fuente de la tabla
+        style.configure("mystyle.Treeview.Heading", font=('Calibri', 13, 'bold')) # Se modifica la fuente de las cabeceras
+        style.layout("mystyle.Treeview", [('mystyle.Treeview.treearea', {'sticky':'nswe'})])  # Eliminamos los bordes
 
         # Estructura de la tabla
-        self.tabla = ttk.Treeview(frame, height=20, columns=2)
+        self.tabla = ttk.Treeview(frame, height=20, columns=2, style='mystyle.TreeView')
         self.tabla.grid(row=4, column=0, columnspan=2)
         self.tabla.heading('#0', text='Nombre', anchor=CENTER)
         self.tabla.heading('#1', text='Precio', anchor=CENTER)
