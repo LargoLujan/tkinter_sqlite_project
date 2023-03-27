@@ -1,6 +1,6 @@
 from tkinter import ttk, messagebox
 from tkinter import *
-from ttkthemes import ThemedStyle # Importa ThemedTk desde ttkthemes
+from ttkthemes import ThemedStyle  # Importa ThemedTk desde ttkthemes
 import sqlite3
 
 
@@ -12,7 +12,7 @@ class Product:
         self.windows.title("App Gestor de Productos")  # Título de la ventana
         self.windows.resizable(1, 1)  # Activar el redimensionamiento de la ventana. Para desactivarla: (0,0)
         self.windows.wm_iconbitmap('recursos/icon.ico')
-        style = ThemedStyle(self.windows) # Aplica el tema 'vista' de ttkthemes
+        style = ThemedStyle(self.windows)  # Aplica el tema 'vista' de ttkthemes
         style.set_theme('clam')
 
         # Creación del contenedor Frame principal
@@ -65,7 +65,8 @@ class Product:
         style.map("mystyle.TreeView", background=[('selected', 'blue')], foreground=[('selected', 'white')])
 
         # Estructura de la tabla
-        self.tabla = ttk.Treeview(frame, height=20, columns=("Precio", "Categoría", "Stock"), style='mystyle.TreeView')  # Añade una columna para Categoría
+        self.tabla = ttk.Treeview(frame, height=20, columns=("Precio", "Categoría", "Stock"),
+                                  style='mystyle.TreeView')  # Añade una columna para Categoría
         self.tabla.grid(row=6, column=0, columnspan=2)
         self.tabla.heading('#0', text='Nombre', anchor=CENTER)  # Cabeceras de la tabla
         self.tabla.heading('#1', text='Precio', anchor=CENTER)
@@ -139,7 +140,7 @@ class Product:
         if self.validacion_nombre() and self.validacion_precio() and self.validacion_categoria() and self.validacion_stock():
             query = "INSERT INTO product VALUES(NULL, ?, ?, ?, ?)"
             messagebox.showinfo("Información",
-                                "Producto: " + self.nombre.get() + "\n" + "Precio: " + self.precio.get() + " €" + "\n" + "Categoria: " + self.categoria.get()+ "\n" + "Stock: " + self.stock.get())
+                                "Producto: " + self.nombre.get() + "\n" + "Precio: " + self.precio.get() + " €" + "\n" + "Categoria: " + self.categoria.get() + "\n" + "Stock: " + self.stock.get())
             parametros = (self.nombre.get(), self.precio.get(), self.categoria.get(), self.stock.get())
             self.db_query(query, parametros)
             # Para debug
@@ -180,14 +181,15 @@ class Product:
 
     def edit_producto(self):
         self.mensaje['text'] = ''  # Mensaje inicialmente vacío
-
         try:
-            nombre = self.tabla.item(self.tabla.selection())['text']
-            old_precio = self.tabla.item(self.tabla.selection())['values'][
-                0]  # El precio se encuentra dentro de una lista
+            self.tabla.item(self.tabla.selection())['text'][0]
         except IndexError as e:
             self.mensaje['text'] = 'Por favor, seleccione un producto'
             return
+        nombre = self.tabla.item(self.tabla.selection())['text']
+        old_precio = self.tabla.item(self.tabla.selection())['values'][0]
+        categoria = self.tabla.item(self.tabla.selection())['values'][1]
+        stock = self.tabla.item(self.tabla.selection())['values'][2]
 
         # Crear una ventana por delante de la principal
         self.ventana_editar = Toplevel()
@@ -197,6 +199,102 @@ class Product:
         self.ventana_editar.resizable(1, 1)
         # Icono de la ventana
         self.ventana_editar.wm_iconbitmap('recursos/icon.ico')
+
+        titulo = Label(self.ventana_editar, text="Editar el siguiente Producto", font=("Calibri", 50, "bold"))
+        titulo.grid(column=0, row=0)
+
+        # Creación del contenedor Frame de la ventana de Editar Producto
+        frame_ep = LabelFrame(self.ventana_editar, text="Editar el siguiente Producto")
+        frame_ep.grid(row=1, column=0, columnspan=20, pady=20)
+
+        # Label Nombre antiguo
+        self.etiqueta_nombre_antiguo = Label(frame_ep, text="Nombre antiguo: ")
+        self.etiqueta_nombre_antiguo.grid(row=2, column=0)
+
+        # Entry nombre antiguo
+        self.input_nombre_antiguo = Entry(frame_ep, textvariable=StringVar(self.ventana_editar, value=nombre),
+                                          state="readonly")
+        self.input_nombre_antiguo.grid(row=2, column=1)
+
+        # Label nombre nuevo
+        self.etiqueta_nombre_nuevo = Label(frame_ep, text="Nombre nuevo: ")
+        self.etiqueta_nombre_nuevo.grid(row=3, column=0)
+
+        # Entry nombre nuevo
+        self.input_nombre_nuevo = Entry(frame_ep)
+        self.input_nombre_nuevo.grid(row=3, column=1)
+        self.input_nombre_nuevo.focus()
+
+        # Label precio antiguo
+        self.etiqueta_precio_antiguo = Label(frame_ep, text="Precio antiguo: ")
+        self.etiqueta_precio_antiguo.grid(row=4, column=0)
+
+        #  Entry precio antiguo
+        self.input_precio_antiguo = Entry(frame_ep, textvariable=StringVar(self.ventana_editar, value=old_precio),
+                                          state='readonly')
+        self.input_precio_antiguo.grid(row=4, column=1)
+
+        # Label Precio nuevo
+        self.etiqueta_precio_nuevo = Label(frame_ep, text="Precio nuevo: ")
+        self.etiqueta_precio_nuevo.grid(row=5, column=0)
+
+        # Entry Precio nuevo
+        self.input_precio_nuevo = Entry(frame_ep)
+        self.input_precio_nuevo.grid(row=5, column=1)
+
+        # Label Categoría antigua
+        self.etiqueta_categoria_antigua = Label(frame_ep, text="Categoría antigua: ")
+        self.etiqueta_categoria_antigua.grid(row=6, column=0)
+
+        # Entry Categoría antigua
+        self.input_categoria_antigua = Entry(frame_ep, textvariable=StringVar(self.ventana_editar, value=categoria),
+                                             state='readonly')
+        self.input_categoria_antigua.grid(row=6, column=1)
+
+        # Label Categoría nueva
+        self.etiqueta_categoria_nuevo = Label(frame_ep, text="Precio nuevo: ")
+        self.etiqueta_categoria_nuevo.grid(row=7, column=0)
+
+        # Entry Categoría nueva
+        self.input_categoria_nuevo = Entry(frame_ep)
+        self.input_categoria_nuevo.grid(row=7, column=1)
+
+        # Botón Actualizar Producto
+        self.boton_actualizar = ttk.Button(frame_ep, text="Actualizar Producto",
+                                           command=lambda: self.actualizar_productos(self.input_nombre_nuevo.get(),
+                                                                                     self.input_nombre_antiguo.get(),
+                                                                                     self.input_precio_nuevo.get(),
+                                                                                     self.input_precio_antiguo.get()))
+        self.boton_actualizar.grid(row=6, columnspan=2, sticky=W + E)
+
+    def actualizar_productos(self, nuevo_nombre, antiguo_nombre, nuevo_precio, antiguo_precio):
+        producto_modificado = False
+        query = 'UPDATE producto SET nombre = ?, precio = ?, categorize = ?, stock = ? WHERE nombre = ? AND precio = ? AND categorize = ? AND stock =?'
+        if nuevo_nombre != '' and nuevo_precio != '':
+            # Si el usuario escribe nuevo nombre y nuevo precio, se cambian ambos
+            parametros = (nuevo_nombre, nuevo_precio, antiguo_nombre, antiguo_precio)
+            producto_modificado = True
+        elif nuevo_nombre != '' and nuevo_precio == '':
+            # Si el usuario deja vacío el nuevo precio, se mantiene el pecio anterior
+            parametros = (nuevo_nombre, antiguo_precio, antiguo_nombre,
+                          antiguo_precio)
+            producto_modificado = True
+        elif nuevo_nombre == '' and nuevo_precio != '':
+            # Si el usuario deja vacío el nuevo nombre, se mantiene el nombre anterior
+            parametros = (antiguo_nombre, nuevo_precio, antiguo_nombre,
+                          antiguo_precio)
+            producto_modificado = True
+
+        if producto_modificado:
+            self.db_consulta(query, parametros)  # Ejecutar la consulta
+            self.ventana_editar.destroy()  # Cerrar la ventana de edicion de productos
+            self.mensaje['text'] = 'El producto {} ha sido actualizado con éxito'.format(
+                antiguo_nombre)  # Mostrar mensaje para el usuario
+            self.get_productos()  # Actualizar la tabla de productos
+        else:
+            self.ventana_editar.destroy()  # Cerrar la ventana de edicion de productos
+            self.mensaje['text'] = 'El producto {} NO ha sido actualizado'.format(
+                antiguo_nombre)  # Mostrar mensaje para el usuario
 
 
 if __name__ == '__main__':
