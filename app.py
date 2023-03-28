@@ -1,3 +1,4 @@
+import csv
 from tkinter import ttk, messagebox
 from tkinter import *
 from ttkthemes import ThemedStyle  # Importa ThemedTk desde ttkthemes
@@ -80,7 +81,7 @@ class Product:
         self.mensaje = Label(frame, text='')
         self.mensaje.grid(row=8, columnspan=2)
 
-        # Botones de eliminar y editar
+        # Botones de eliminar, editar y descargar
         s = ttk.Style()
         s.configure('my.TButton', font=('Calibri', 14, 'bold'))
 
