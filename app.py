@@ -92,10 +92,14 @@ class Product:
         self.get_products()
 
     def on_select(self, event):
-        # Obtenemos el elemento seleccionado
-        item = self.tabla.selection()[0]
-        # Marcamos el elemento seleccionado
-        self.tabla.item(item, tags=('selected',))
+        # Comprueba si hay un elemento seleccionado en la tabla
+        if len(self.tabla.selection()) > 0:
+            # Obtenemos el elemento seleccionado
+            item = self.tabla.selection()[0]
+            # Marcamos el elemento seleccionado
+            self.tabla.item(item, tags=('selected',))
+        else:
+            self.mensaje['text'] = 'Seleccione producto'
 
     def db_query(self, consulta, parametros=()):
         with sqlite3.connect(self.db) as con:
@@ -259,42 +263,76 @@ class Product:
         self.input_categoria_nuevo = Entry(frame_ep)
         self.input_categoria_nuevo.grid(row=7, column=1)
 
+        # Label Stock antiguo
+        self.etiqueta_stock_antiguo = Label(frame_ep, text="Stock antiguo: ")
+        self.etiqueta_stock_antiguo.grid(row=8, column=0)
+
+        # Entry Stock antiguo
+        self.input_stock_antiguo = Entry(frame_ep, textvariable=StringVar(self.ventana_editar, value=stock),
+                                             state='readonly')
+        self.input_stock_antiguo.grid(row=8, column=1)
+
+        # Label Stock nuevo
+        self.etiqueta_stock_nuevo = Label(frame_ep, text="Stock nuevo: ")
+        self.etiqueta_stock_nuevo.grid(row=9, column=0)
+
+        # Entry Stock nuevo
+        self.input_stock_nuevo = Entry(frame_ep)
+        self.input_stock_nuevo.grid(row=9, column=1)
+
         # Botón Actualizar Producto
         self.boton_actualizar = ttk.Button(frame_ep, text="Actualizar Producto",
                                            command=lambda: self.actualizar_productos(self.input_nombre_nuevo.get(),
                                                                                      self.input_nombre_antiguo.get(),
                                                                                      self.input_precio_nuevo.get(),
-                                                                                     self.input_precio_antiguo.get()))
-        self.boton_actualizar.grid(row=6, columnspan=2, sticky=W + E)
+                                                                                     self.input_precio_antiguo.get(),
+                                                                                     self.input_categoria_nuevo.get(),
+                                                                                     self.input_categoria_antigua.get(),
+                                                                                     self.input_stock_nuevo.get(),
+                                                                                     self.input_stock_antiguo.get()))
+        self.boton_actualizar.grid(row=10, columnspan=2, sticky=W + E)
 
-    def actualizar_productos(self, nuevo_nombre, antiguo_nombre, nuevo_precio, antiguo_precio):
+    def actualizar_productos(self, nuevo_nombre, antiguo_nombre, nuevo_precio, antiguo_precio, nueva_categoria,
+                             antigua_categoria, nuevo_stock, antiguo_stock):
         producto_modificado = False
-        query = 'UPDATE producto SET nombre = ?, precio = ?, categorize = ?, stock = ? WHERE nombre = ? AND precio = ? AND categorize = ? AND stock =?'
-        if nuevo_nombre != '' and nuevo_precio != '':
-            # Si el usuario escribe nuevo nombre y nuevo precio, se cambian ambos
-            parametros = (nuevo_nombre, nuevo_precio, antiguo_nombre, antiguo_precio)
+        # Cambia "categorize" a "categoria" en la consulta SQL
+        query = 'UPDATE product SET name = ?, price = ?, categorize = ?, stock = ? WHERE name = ? AND price = ? AND categorize = ? AND stock = ?'
+        if nuevo_nombre != '' and nuevo_precio != '' and nueva_categoria != '' and nuevo_stock != '':
+            # Si el usuario escribe nuevo nombre, nuevo precio, nueva categoria y nuevo stock, se cambian todos
+            parametros = (
+            nuevo_nombre, nuevo_precio, nueva_categoria, nuevo_stock, antiguo_nombre, antiguo_precio, antigua_categoria,
+            antiguo_stock)
             producto_modificado = True
-        elif nuevo_nombre != '' and nuevo_precio == '':
-            # Si el usuario deja vacío el nuevo precio, se mantiene el pecio anterior
-            parametros = (nuevo_nombre, antiguo_precio, antiguo_nombre,
-                          antiguo_precio)
+        elif nuevo_nombre != '' and nuevo_precio == '' and nueva_categoria == '' and nuevo_stock == '':
+            # Si el usuario deja vacío el nuevo precio, nueva categoria y nuevo stock, se mantiene el pecio anterior, antigua categoria y antiguo stock
+            parametros = (
+            nuevo_nombre, antiguo_precio, antigua_categoria, antiguo_stock, antiguo_nombre, antiguo_precio,
+            antigua_categoria, antiguo_stock)
             producto_modificado = True
-        elif nuevo_nombre == '' and nuevo_precio != '':
-            # Si el usuario deja vacío el nuevo nombre, se mantiene el nombre anterior
-            parametros = (antiguo_nombre, nuevo_precio, antiguo_nombre,
-                          antiguo_precio)
+        elif nuevo_nombre == '' and nuevo_precio != '' and nueva_categoria == '' and nuevo_stock == '':
+            # Si el usuario deja vacío el nuevo nombre, nueva categoria y nuevo stock, se mantiene el nombre anterior, antigua categoria y antiguo stock
+            parametros = (
+            antiguo_nombre, nuevo_precio, antigua_categoria, antiguo_stock, antiguo_nombre, antiguo_precio,
+            antigua_categoria, antiguo_stock)
             producto_modificado = True
+
+        # Si el producto ha sido modificado, actualizamos la base de datos y refrescamos la tabla
+        if producto_modificado:
+            self.db_query(query, parametros)
+            self.mensaje['text'] = f'Producto {antiguo_nombre} actualizado correctamente'
+            self.get_products()
 
         if producto_modificado:
-            self.db_consulta(query, parametros)  # Ejecutar la consulta
+            self.db_query(query, parametros)  # Ejecutar la consulta
             self.ventana_editar.destroy()  # Cerrar la ventana de edicion de productos
             self.mensaje['text'] = 'El producto {} ha sido actualizado con éxito'.format(
                 antiguo_nombre)  # Mostrar mensaje para el usuario
-            self.get_productos()  # Actualizar la tabla de productos
+            self.get_products()  # Actualizar la tabla de productos
         else:
             self.ventana_editar.destroy()  # Cerrar la ventana de edicion de productos
             self.mensaje['text'] = 'El producto {} NO ha sido actualizado'.format(
                 antiguo_nombre)  # Mostrar mensaje para el usuario
+
 
 
 if __name__ == '__main__':
